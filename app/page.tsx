@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { TrendCard } from '@/components/TrendCard';
 import { Trend, BangersResponse } from '@/lib/types';
-import { Flame, Settings, RotateCw, Copy } from 'lucide-react';
+import { Settings, RotateCw, Copy, Check } from 'lucide-react';
 
 export default function Page() {
   const [groqKey, setGroqKey] = useState('');
@@ -15,6 +15,7 @@ export default function Page() {
   const [trends, setTrends] = useState<Trend[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [copiedAll, setCopiedAll] = useState(false);
 
   // Load Groq key from localStorage on mount
   useEffect(() => {
@@ -29,13 +30,13 @@ export default function Page() {
     }
     localStorage.setItem('groq_key', groqKey);
     setShowSettings(false);
-    showToast('API key saved successfully! 🔐');
+    showToast('API key saved');
   };
 
   const handleClearKeys = () => {
     localStorage.removeItem('groq_key');
     setGroqKey('');
-    showToast('API key cleared');
+    showToast('API key removed');
   };
 
   const showToast = (message: string) => {
@@ -48,7 +49,7 @@ export default function Page() {
     setTrends([]);
 
     if (!groqKey.trim()) {
-      setError('Please set your Groq API key first');
+      setError('Please configure your Groq API key in settings.');
       setShowSettings(true);
       return;
     }
@@ -70,12 +71,11 @@ export default function Page() {
 
       const data = (await response.json()) as BangersResponse;
       setTrends(data.trends);
-      showToast('Fresh bangers loaded! 🔥');
     } catch (err) {
       const message =
         err instanceof Error
           ? err.message
-          : 'Trends page temporarily down, try again in a minute';
+          : 'Something went wrong. Please try again.';
       setError(message);
     } finally {
       setLoading(false);
@@ -86,79 +86,72 @@ export default function Page() {
     setTrends((prevTrends) =>
       prevTrends.map((t) => (t.rank === updatedTrend.rank ? updatedTrend : t))
     );
-    showToast('Tweet refreshed!');
   };
 
   const handleCopyAll = async () => {
     const allTweets = trends
-      .map((t) => `${t.topic}\n${t.generatedTweet}`)
-      .join('\n\n---\n\n');
+      .map((t) => t.generatedTweet)
+      .join('\n\n');
 
     try {
       await navigator.clipboard.writeText(allTweets);
-      showToast('All tweets copied to clipboard! 📋');
+      setCopiedAll(true);
+      setTimeout(() => setCopiedAll(false), 2000);
     } catch (error) {
-      console.error('[v0] Failed to copy all:', error);
-      setError('Failed to copy tweets');
+      console.error('Failed to copy all:', error);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+    <div className="min-h-screen bg-black text-white font-sans selection:bg-white selection:text-black">
       {/* Toast */}
       {toast && (
-        <div className="fixed top-4 right-4 bg-emerald-500/90 text-white px-4 py-3 rounded-lg shadow-lg z-50 animate-in fade-in slide-in-from-top-2">
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-white text-black px-4 py-2 rounded-full text-sm font-medium z-50 shadow-2xl">
           {toast}
         </div>
       )}
 
       {/* Settings Modal */}
       {showSettings && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <Card className="bg-slate-900 border-slate-700 w-full max-w-md p-6">
-            <h2 className="text-xl font-bold text-white mb-4">API Settings</h2>
-            <div className="space-y-4">
+        <div className="fixed inset-0 bg-white/10 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <Card className="bg-black border border-zinc-800 w-full max-w-md p-6 rounded-2xl shadow-2xl">
+            <h2 className="text-xl font-bold mb-6">Configuration</h2>
+            <div className="space-y-6">
               <div>
-                <label className="text-sm text-slate-300 mb-2 block">
+                <label className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-2 block">
                   Groq API Key
                 </label>
                 <Input
                   type="password"
-                  placeholder="gsk_..."
+                  placeholder="Paste your key here..."
                   value={groqKey}
                   onChange={(e) => setGroqKey(e.target.value)}
-                  className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500"
+                  className="bg-black border-zinc-800 focus:border-white transition-colors rounded-xl h-12"
                 />
-                <p className="text-xs text-slate-400 mt-2">
-                  Free API key at{' '}
+                <p className="text-xs text-zinc-500 mt-3">
+                  Get a free key at{' '}
                   <a
                     href="https://console.groq.com/keys"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-emerald-400 hover:underline"
+                    className="text-white hover:underline"
                   >
                     console.groq.com
                   </a>
                 </p>
               </div>
 
-              <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-3">
-                <p className="text-xs text-emerald-300">
-                  ✓ Trends fetched from public sources • No X API key required
-                </p>
-              </div>
-
-              <div className="flex gap-2 pt-2">
+              <div className="flex gap-3">
                 <Button
                   onClick={handleSaveKeys}
-                  className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                  className="flex-1 bg-white text-black hover:bg-zinc-200 h-12 rounded-xl font-bold"
                 >
-                  Save Key
+                  Save
                 </Button>
                 <Button
                   onClick={handleClearKeys}
                   variant="outline"
-                  className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-800"
+                  className="flex-1 border-zinc-800 hover:bg-zinc-900 h-12 rounded-xl"
                 >
                   Clear
                 </Button>
@@ -167,9 +160,9 @@ export default function Page() {
               <Button
                 onClick={() => setShowSettings(false)}
                 variant="ghost"
-                className="w-full text-slate-400 hover:text-slate-300"
+                className="w-full text-zinc-500 hover:text-white"
               >
-                Close
+                Cancel
               </Button>
             </div>
           </Card>
@@ -177,93 +170,85 @@ export default function Page() {
       )}
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-12">
+      <div className="max-w-2xl mx-auto px-4 py-8 md:py-16">
         {/* Header */}
-        <div className="flex items-center justify-between mb-12">
+        <header className="flex items-start justify-between mb-12">
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <Flame className="h-8 w-8 text-emerald-500" />
-              <h1 className="text-4xl md:text-5xl font-bold text-white">
-                NaijaTrendBanger
-              </h1>
-            </div>
-            <p className="text-slate-400 text-lg">
-              10 fresh trending topics in Nigeria → 10 ready-to-post Naija bangers
+            <h1 className="text-3xl font-black tracking-tight mb-2">
+              NaijaTrendBanger
+            </h1>
+            <p className="text-zinc-500 font-medium">
+              Authentic Nigerian trends transformed into viral posts.
             </p>
           </div>
           <Button
             onClick={() => setShowSettings(true)}
-            variant="outline"
+            variant="ghost"
             size="icon"
-            className="border-slate-600 text-slate-300 hover:bg-slate-800"
+            className="text-zinc-500 hover:text-white hover:bg-zinc-900 rounded-full"
           >
-            <Settings className="h-5 w-5" />
+            <Settings className="h-6 w-6" />
           </Button>
-        </div>
+        </header>
 
-        {/* Hero Section */}
-        <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700 p-8 mb-12">
-          <h2 className="text-2xl font-bold text-white mb-2">
-            No bot vibes. Pure Naija pidgin, hype, and real talk.
-          </h2>
-            <p className="text-slate-300 mb-6">
-              Pull the hottest Nigerian trends from public sources and let Groq cook
-              up authentic Naija-style tweets that sound like a real sharp guy
-              posting. Only need a Groq API key—no X credentials required!
+        {/* Hero / Action Section */}
+        <section className="mb-12">
+          <div className="space-y-6">
+            <p className="text-xl text-zinc-300 leading-relaxed">
+              Skip the generic AI vibes. Get real Naija pidgin and street-smart commentary on the latest local trends, ready for your timeline.
             </p>
             <Button
-            onClick={handleFetchTrends}
-            disabled={loading}
-            size="lg"
-            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
-          >
-            {loading ? (
-              <>
-                <RotateCw className="h-5 w-5 mr-2 animate-spin" />
-                Pulling hot trends from Naija Twitter... Oya make we cook bangers
-              </>
-            ) : (
-              <>
-                <Flame className="h-5 w-5 mr-2" />
-                Fetch 10 Latest Naija Trends & Generate Bangers
-              </>
-            )}
-          </Button>
-        </Card>
+              onClick={handleFetchTrends}
+              disabled={loading}
+              className="w-full h-14 bg-white text-black hover:bg-zinc-200 text-lg font-black rounded-full transition-all active:scale-[0.98]"
+            >
+              {loading ? (
+                <>
+                  <RotateCw className="h-5 w-5 mr-3 animate-spin" />
+                  Analyzing trends...
+                </>
+              ) : (
+                'Generate Today\'s Bangers'
+              )}
+            </Button>
+          </div>
+        </section>
 
         {/* Error Message */}
         {error && (
-          <Card className="bg-red-500/10 border-red-500/30 p-4 mb-8">
-            <p className="text-red-400">
-              <span className="font-semibold">Error:</span> {error}
+          <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-2xl mb-8">
+            <p className="text-sm text-zinc-400">
+              <span className="font-bold text-white mr-2">Note:</span> {error}
             </p>
-          </Card>
+          </div>
         )}
 
         {/* Results Section */}
         {trends.length > 0 && (
-          <div>
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-2xl font-bold text-white">
-                Top 10 Trends in Nigeria
-              </h3>
+          <div className="space-y-8">
+            <div className="flex items-center justify-between sticky top-0 py-4 bg-black/80 backdrop-blur-md z-10 border-b border-zinc-900">
+              <h2 className="text-lg font-bold">Nigeria Trends</h2>
               <Button
                 onClick={handleCopyAll}
-                variant="outline"
+                variant="ghost"
                 size="sm"
-                className="border-emerald-500/30 hover:border-emerald-500 hover:bg-emerald-500/10 text-emerald-400"
+                className="text-zinc-500 hover:text-white font-bold"
               >
-                <Copy className="h-4 w-4 mr-2" />
-                Copy All
+                {copiedAll ? (
+                  <Check className="h-4 w-4 mr-2" />
+                ) : (
+                  <Copy className="h-4 w-4 mr-2" />
+                )}
+                {copiedAll ? 'Copied' : 'Copy All'}
               </Button>
             </div>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-1">
+            <div className="space-y-px bg-zinc-900 border-x border-zinc-900">
               {trends.map((trend) => (
                 <TrendCard
                   key={trend.rank}
                   trend={trend}
                   groqApiKey={groqKey}
-                  onCopied={() => showToast('Tweet copied to clipboard! 📋')}
+                  onCopied={() => showToast('Copied to clipboard')}
                   onRefreshed={handleUpdateTrend}
                 />
               ))}
@@ -273,14 +258,18 @@ export default function Page() {
 
         {/* Empty State */}
         {!loading && trends.length === 0 && !error && (
-          <Card className="bg-slate-800/50 border-slate-700 p-12 text-center">
-            <Flame className="h-12 w-12 text-slate-500 mx-auto mb-4" />
-            <p className="text-slate-400 text-lg">
-              Hit the button above to fetch the latest hot trends and generate
-              some fire tweets!
+          <div className="py-20 text-center border border-dashed border-zinc-800 rounded-3xl">
+            <p className="text-zinc-500 font-medium">
+              No trends loaded yet. Tap the button above to start.
             </p>
-          </Card>
+          </div>
         )}
+
+        <footer className="mt-20 pt-8 border-t border-zinc-900 text-center">
+          <p className="text-zinc-600 text-xs font-bold uppercase tracking-widest">
+            Built for Naija Twitter • Powered by Groq
+          </p>
+        </footer>
       </div>
     </div>
   );
