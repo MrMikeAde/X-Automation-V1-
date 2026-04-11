@@ -1,30 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getNigeriaTrends } from '@/lib/scraper';
-import { generateNaijaTweet, GeneratedTweet } from '@/lib/groq';
+import { generateNaijaTweet } from '@/lib/groq';
 import { BangersRequest, BangersResponse, Trend } from '@/lib/types';
 import { validateGroqApiKey } from '@/lib/validation';
+import { LRUCache } from 'lru-cache';
 import {
   checkRateLimit,
   getIpFromRequest,
-  cleanupOldEntries,
 } from '@/lib/rate-limiter';
 
-// Cleanup old rate limit entries occasionally
-if (Math.random() < 0.1) {
-  // ~10% of requests trigger cleanup
-  cleanupOldEntries();
-}
+// Initialize caches
+const trendsCache = new LRUCache<string, any>({
+  max: 50,
+  ttl: 1000 * 60 * 15, // 15 minutes
+});
+
+const tweetsCache = new LRUCache<string, Trend[]>({
+  max: 100,
+  ttl: 1000 * 60 * 5, // 5 minutes
+});
 
 export async function POST(request: NextRequest) {
   try {
-    // Rate limiting
     const ip = getIpFromRequest(request);
     const rateLimit = checkRateLimit(ip);
 
     if (!rateLimit.allowed) {
       return NextResponse.json(
         {
-          error: `Too many requests. Please try again in ${Math.ceil(rateLimit.resetIn / 1000)} seconds.`,
+          error: `Too many requests. Try again in ${Math.ceil(rateLimit.resetIn / 1000)}s.`,
         },
         { status: 429 }
       );
@@ -33,7 +37,6 @@ export async function POST(request: NextRequest) {
     const body = (await request.json()) as BangersRequest;
     const { groqApiKey } = body;
 
-    // Validate API key format
     const validation = validateGroqApiKey(groqApiKey);
     if (!validation.valid) {
       return NextResponse.json(
@@ -42,73 +45,56 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fetch trends from public source (via scraper)
-    const scrapedTrends = await getNigeriaTrends();
+    // Check trends cache
+    let scrapedTrends = trendsCache.get('nigeria_trends');
+    if (!scrapedTrends) {
+      scrapedTrends = await getNigeriaTrends();
+      trendsCache.set('nigeria_trends', scrapedTrends);
+    }
 
-    if (scrapedTrends.length === 0) {
+    if (!scrapedTrends || scrapedTrends.length === 0) {
       return NextResponse.json(
-        {
-          error:
-            'Trends page temporarily down, try again in a minute. Using demo data instead.',
-        },
+        { error: 'Could not fetch trends. Try again soon.' },
         { status: 503 }
       );
     }
 
-    // Generate tweets for each trend
-    const trends: Trend[] = [];
-    for (let i = 0; i < scrapedTrends.length; i++) {
-      const trendData = scrapedTrends[i];
+    // Check tweets cache (using hash of trends + apiKey to distinguish users)
+    const cacheKey = `tweets_${scrapedTrends.map((t: any) => t.name).join('_').substring(0, 100)}_${groqApiKey.substring(0, 10)}`;
+    const cachedTweets = tweetsCache.get(cacheKey);
+    if (cachedTweets) {
+      return NextResponse.json({
+        success: true,
+        timestamp: new Date().toISOString(),
+        trends: cachedTweets,
+      });
+    }
+
+    // Parallel tweet generation
+    const tweetPromises = scrapedTrends.map(async (trendData: any, index: number) => {
       try {
-        const result = await generateNaijaTweet(
-          trendData.name,
-          groqApiKey
-        );
-        trends.push({
-          rank: i + 1,
+        const result = await generateNaijaTweet(trendData.name, groqApiKey);
+        return {
+          rank: index + 1,
           topic: trendData.name,
           tweetVolume: trendData.volume || 'Trending',
           generatedTweet: result.text,
           characterCount: result.characterCount,
-        });
-      } catch (tweetError) {
-        const errorMsg =
-          tweetError instanceof Error ? tweetError.message : 'Unknown error';
-        console.error(
-          `Failed to generate tweet for ${trendData.name}:`,
-          errorMsg
-        );
-
-        // Check if it's an auth error - propagate to user
-        if (
-          errorMsg.includes('Invalid Groq API key') ||
-          errorMsg.includes('Unauthorized')
-        ) {
-          return NextResponse.json(
-            { error: errorMsg },
-            { status: 401 }
-          );
-        }
-
-        // Check if it's a rate limit error
-        if (errorMsg.includes('rate limit') || errorMsg.includes('429')) {
-          return NextResponse.json(
-            { error: errorMsg },
-            { status: 429 }
-          );
-        }
-
-        // Continue with next trend for other errors
-        trends.push({
-          rank: i + 1,
+        };
+      } catch (error) {
+        console.error(`Failed for ${trendData.name}:`, error);
+        return {
+          rank: index + 1,
           topic: trendData.name,
           tweetVolume: trendData.volume || 'Trending',
-          generatedTweet:
-            'Na we go chop this tweet banger later sha. Groq servers are busy, try again soon!',
+          generatedTweet: 'Banger still loading. Tap refresh to cook it manually.',
           characterCount: 0,
-        });
+        };
       }
-    }
+    });
+
+    const trends = await Promise.all(tweetPromises);
+    tweetsCache.set(cacheKey, trends);
 
     const response: BangersResponse = {
       success: true,
@@ -119,13 +105,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(response);
   } catch (error) {
     console.error('Error in /api/bangers:', error);
-    const errorMessage =
-      error instanceof Error
-        ? error.message
-        : 'An unexpected error occurred';
-
     return NextResponse.json(
-      { error: errorMessage },
+      { error: error instanceof Error ? error.message : 'An unexpected error occurred' },
       { status: 500 }
     );
   }

@@ -1,3 +1,5 @@
+import * as cheerio from 'cheerio';
+
 /**
  * Public web scraping utility to fetch Nigeria trending topics
  * Multi-source scraper with timeout protection and demo data fallback
@@ -10,17 +12,11 @@ export interface ScrapedTrend {
 
 /**
  * Fetch top 10 Nigeria trending topics from public sources
- * Tries multiple sources with timeouts, falls back to demo data
  */
 export async function getNigeriaTrends(): Promise<ScrapedTrend[]> {
   const sources = [
     {
       url: 'https://getdaytrends.com/nigeria/',
-      parser: parseGetDayTrends,
-      timeout: 8000,
-    },
-    {
-      url: 'https://getdaytrends.com/ng/',
       parser: parseGetDayTrends,
       timeout: 8000,
     },
@@ -31,9 +27,7 @@ export async function getNigeriaTrends(): Promise<ScrapedTrend[]> {
     },
   ];
 
-  // Try each source in sequence
   for (const source of sources) {
-    console.log(`Attempting to scrape: ${source.url}`);
     try {
       const trends = await scrapeWithTimeout(
         source.url,
@@ -41,7 +35,6 @@ export async function getNigeriaTrends(): Promise<ScrapedTrend[]> {
         source.timeout
       );
       if (trends.length >= 5) {
-        console.log(`Successfully scraped ${trends.length} trends`);
         return trends.slice(0, 10);
       }
     } catch (error) {
@@ -52,8 +45,6 @@ export async function getNigeriaTrends(): Promise<ScrapedTrend[]> {
     }
   }
 
-  // All sources failed, return demo data
-  console.log('All scraping sources failed, using demo trends');
   return getDemoTrends();
 }
 
@@ -89,87 +80,47 @@ async function scrapeWithTimeout(
 
 function parseGetDayTrends(html: string): ScrapedTrend[] {
   const trends: ScrapedTrend[] = [];
+  const $ = cheerio.load(html);
   const seenTopics = new Set<string>();
 
-  try {
-    // Match trend links in getdaytrends format
-    const trendRegex =
-      /<a\s+href="[^"]*trend[^"]*"[^>]*>([^<]+)<\/a>/gi;
-    let match;
-
-    while ((match = trendRegex.exec(html)) !== null && trends.length < 10) {
-      const topic = decodeHtmlEntities(match[1].trim());
-
-      // Skip empty or very short topics, avoid duplicates
-      if (topic && !seenTopics.has(topic) && topic.length > 2) {
-        seenTopics.add(topic);
-        trends.push({
-          name: topic,
-          volume: 'Trending',
-        });
-      }
+  $('td.main a').each((_, element) => {
+    const topic = $(element).text().trim();
+    if (topic && !seenTopics.has(topic) && topic.length > 2 && trends.length < 10) {
+      seenTopics.add(topic);
+      const volume = $(element).closest('tr').find('.count').text().trim() || 'Trending';
+      trends.push({ name: topic, volume });
     }
+  });
 
-    return trends;
-  } catch (error) {
-    console.error('Error parsing GetDayTrends format:', error);
-    return [];
-  }
+  return trends;
 }
 
 function parseTrends24(html: string): ScrapedTrend[] {
   const trends: ScrapedTrend[] = [];
+  const $ = cheerio.load(html);
   const seenTopics = new Set<string>();
 
-  try {
-    // Match trend items in trends24 format
-    const trendRegex = /<a[^>]*href="[^"]*trend[^"]*"[^>]*>([^<]+)<\/a>/gi;
-    let match;
-
-    while ((match = trendRegex.exec(html)) !== null && trends.length < 10) {
-      const topic = decodeHtmlEntities(match[1].trim());
-
-      if (topic && !seenTopics.has(topic) && topic.length > 2) {
-        seenTopics.add(topic);
-        trends.push({
-          name: topic,
-          volume: 'Trending',
-        });
-      }
+  $('.trend-card__list li a').each((_, element) => {
+    const topic = $(element).text().trim();
+    if (topic && !seenTopics.has(topic) && topic.length > 2 && trends.length < 10) {
+      seenTopics.add(topic);
+      trends.push({ name: topic, volume: 'Trending' });
     }
+  });
 
-    return trends;
-  } catch (error) {
-    console.error('Error parsing Trends24 format:', error);
-    return [];
-  }
-}
-
-function decodeHtmlEntities(text: string): string {
-  return text
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&#x[0-9a-fA-F]+;/g, (match) => {
-      return String.fromCharCode(
-        parseInt(match.substring(3, match.length - 1), 16)
-      );
-    });
+  return trends;
 }
 
 /**
  * Demo trends returned when all scraping fails
- * App still fully functional for demo/testing
  */
 function getDemoTrends(): ScrapedTrend[] {
   return [
-    { name: 'Naija Music Vibes', volume: 'Trending' },
-    { name: 'Nigerian Politics', volume: 'Trending' },
-    { name: 'Afrobeats Global', volume: 'Trending' },
+    { name: 'Naija Music Vibes', volume: '50K' },
+    { name: 'Nigerian Politics', volume: '120K' },
+    { name: 'Afrobeats Global', volume: '85K' },
     { name: 'Lagos Entertainment', volume: 'Trending' },
-    { name: 'Nigeria Tech Scene', volume: 'Trending' },
+    { name: 'Nigeria Tech Scene', volume: '10K' },
     { name: 'Naija Street Fashion', volume: 'Trending' },
     { name: 'Nigerian Films', volume: 'Trending' },
     { name: 'African Innovation', volume: 'Trending' },
