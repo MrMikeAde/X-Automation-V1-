@@ -83,7 +83,7 @@ TWEET: [your complete tweet here - max 280 characters]`;
   } catch (error) {
     const errorMsg =
       error instanceof Error ? error.message : 'Unknown error';
-    console.error('[v0] Error generating tweet:', errorMsg);
+    console.error('Error generating tweet:', errorMsg);
     
     // Check for timeout
     if (

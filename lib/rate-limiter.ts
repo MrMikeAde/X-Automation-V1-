@@ -102,6 +102,6 @@ export function cleanupOldEntries(): void {
   entriesToDelete.forEach((ip) => rateLimitMap.delete(ip));
 
   if (entriesToDelete.length > 0) {
-    console.log(`[v0] Cleaned up ${entriesToDelete.length} rate limit entries`);
+    console.log(`Cleaned up ${entriesToDelete.length} rate limit entries`);
   }
 }
