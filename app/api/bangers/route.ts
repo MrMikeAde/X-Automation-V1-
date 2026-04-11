@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
         const errorMsg =
           tweetError instanceof Error ? tweetError.message : 'Unknown error';
         console.error(
-          `[v0] Failed to generate tweet for ${trendData.name}:`,
+          `Failed to generate tweet for ${trendData.name}:`,
           errorMsg
         );
 
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('[v0] Error in /api/bangers:', error);
+    console.error('Error in /api/bangers:', error);
     const errorMessage =
       error instanceof Error
         ? error.message

@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     } catch (tweetError) {
       const errorMsg =
         tweetError instanceof Error ? tweetError.message : 'Unknown error';
-      console.error(`[v0] Failed to refresh tweet for ${topic}:`, errorMsg);
+      console.error(`Failed to refresh tweet for ${topic}:`, errorMsg);
 
       // Check for auth errors
       if (
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
       );
     }
   } catch (error) {
-    console.error('[v0] Error in /api/bangers/refresh:', error);
+    console.error('Error in /api/bangers/refresh:', error);
     const errorMessage =
       error instanceof Error
         ? error.message

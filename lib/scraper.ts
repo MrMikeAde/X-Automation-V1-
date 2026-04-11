@@ -33,7 +33,7 @@ export async function getNigeriaTrends(): Promise<ScrapedTrend[]> {
 
   // Try each source in sequence
   for (const source of sources) {
-    console.log(`[v0] Attempting to scrape: ${source.url}`);
+    console.log(`Attempting to scrape: ${source.url}`);
     try {
       const trends = await scrapeWithTimeout(
         source.url,
@@ -41,19 +41,19 @@ export async function getNigeriaTrends(): Promise<ScrapedTrend[]> {
         source.timeout
       );
       if (trends.length >= 5) {
-        console.log(`[v0] Successfully scraped ${trends.length} trends`);
+        console.log(`Successfully scraped ${trends.length} trends`);
         return trends.slice(0, 10);
       }
     } catch (error) {
       console.error(
-        `[v0] Failed to scrape ${source.url}:`,
+        `Failed to scrape ${source.url}:`,
         error instanceof Error ? error.message : 'Unknown error'
       );
     }
   }
 
   // All sources failed, return demo data
-  console.log('[v0] All scraping sources failed, using demo trends');
+  console.log('All scraping sources failed, using demo trends');
   return getDemoTrends();
 }
 
@@ -112,7 +112,7 @@ function parseGetDayTrends(html: string): ScrapedTrend[] {
 
     return trends;
   } catch (error) {
-    console.error('[v0] Error parsing GetDayTrends format:', error);
+    console.error('Error parsing GetDayTrends format:', error);
     return [];
   }
 }
@@ -140,7 +140,7 @@ function parseTrends24(html: string): ScrapedTrend[] {
 
     return trends;
   } catch (error) {
-    console.error('[v0] Error parsing Trends24 format:', error);
+    console.error('Error parsing Trends24 format:', error);
     return [];
   }
 }
