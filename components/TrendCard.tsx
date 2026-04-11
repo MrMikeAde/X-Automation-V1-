@@ -1,9 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Trend } from '@/lib/types';
 import { Copy, Check, RotateCw, Share2 } from 'lucide-react';
 
@@ -24,12 +22,9 @@ export function TrendCard({
 }: TrendCardProps) {
   const [copied, setCopied] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [refreshError, setRefreshError] = useState<string | null>(null);
 
   const characterCount = trend.characterCount || trend.generatedTweet.length;
-  const charPercentage = (characterCount / TWITTER_CHAR_LIMIT) * 100;
-  const charStatus =
-    characterCount <= 280 ? 'text-emerald-400' : 'text-red-400';
+  const isOverLimit = characterCount > TWITTER_CHAR_LIMIT;
 
   const handleCopy = async () => {
     try {
@@ -38,13 +33,12 @@ export function TrendCard({
       onCopied?.();
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      console.error('[v0] Failed to copy:', error);
+      console.error('Failed to copy:', error);
     }
   };
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    setRefreshError(null);
     try {
       const response = await fetch('/api/bangers/refresh', {
         method: 'POST',
@@ -55,31 +49,20 @@ export function TrendCard({
         }),
       });
 
-      if (!response.ok) {
-        const errorData = (await response.json()) as { error?: string };
-        throw new Error(
-          errorData.error || 'Failed to refresh tweet'
-        );
-      }
+      if (!response.ok) throw new Error('Refresh failed');
 
       const data = (await response.json()) as {
         tweet: string;
         characterCount: number;
       };
 
-      const updatedTrend: Trend = {
+      onRefreshed?.({
         ...trend,
         generatedTweet: data.tweet,
         characterCount: data.characterCount,
-      };
-
-      onRefreshed?.(updatedTrend);
+      });
     } catch (error) {
-      const errorMsg =
-        error instanceof Error ? error.message : 'Unknown error';
-      console.error('[v0] Refresh failed:', errorMsg);
-      setRefreshError(errorMsg);
-      setTimeout(() => setRefreshError(null), 3000);
+      console.error('Refresh failed:', error);
     } finally {
       setRefreshing(false);
     }
@@ -87,114 +70,69 @@ export function TrendCard({
 
   const handleShareToX = () => {
     const text = encodeURIComponent(trend.generatedTweet);
-    const xUrl = `https://twitter.com/intent/tweet?text=${text}`;
-    window.open(xUrl, '_blank', 'width=550,height=420');
+    window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
   };
 
   return (
-    <Card className="bg-slate-900/50 border-slate-700 hover:border-slate-600 transition-colors p-6 flex flex-col gap-4">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-start gap-3 flex-1">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500 font-bold text-sm flex-shrink-0">
-            {trend.rank}
-          </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-white truncate text-text-pretty">
+    <div className="bg-black border-b border-zinc-900 p-5 hover:bg-zinc-950 transition-colors group">
+      <div className="flex flex-col gap-3">
+        {/* Header */}
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-zinc-500 font-bold text-sm">#{trend.rank}</span>
+            <h3 className="font-black text-white text-base tracking-tight">
               {trend.topic}
             </h3>
-            <p className="text-sm text-slate-400 mt-1">
-              {trend.tweetVolume}
-            </p>
+            <span className="text-zinc-500 text-xs font-medium">
+              · {trend.tweetVolume}
+            </span>
           </div>
         </div>
-        <Badge
-          variant="outline"
-          className="border-emerald-500/30 text-emerald-400 bg-emerald-500/5 flex-shrink-0"
-        >
-          Trend
-        </Badge>
-      </div>
 
-      <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
-        <p className="text-slate-100 leading-relaxed text-sm">
-          {trend.generatedTweet}
-        </p>
-      </div>
+        {/* Tweet Content */}
+        <div className="mt-1">
+          <p className="text-zinc-100 text-[15px] leading-normal font-medium whitespace-pre-wrap">
+            {trend.generatedTweet}
+          </p>
+        </div>
 
-      {/* Character counter */}
-      <div className="flex items-center justify-between text-xs">
-        <span className={charStatus}>
-          {characterCount}/{TWITTER_CHAR_LIMIT} characters
-        </span>
-        <div className="w-24 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-          <div
-            className={`h-full transition-all ${
-              charPercentage <= 100 ? 'bg-emerald-500' : 'bg-red-500'
-            }`}
-            style={{ width: `${Math.min(charPercentage, 100)}%` }}
-          />
+        {/* Footer Actions */}
+        <div className="flex items-center justify-between mt-2 pt-1">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={handleCopy}
+              className={`flex items-center gap-2 text-zinc-500 hover:text-white transition-colors ${copied ? 'text-white' : ''}`}
+              title="Copy Tweet"
+            >
+              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              <span className="text-xs font-bold uppercase tracking-wider">{copied ? 'Copied' : 'Copy'}</span>
+            </button>
+
+            <button
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className={`flex items-center gap-2 text-zinc-500 hover:text-white transition-colors ${refreshing ? 'animate-pulse' : ''}`}
+              title="New Version"
+            >
+              <RotateCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+              <span className="text-xs font-bold uppercase tracking-wider">Refresh</span>
+            </button>
+
+            <button
+              onClick={handleShareToX}
+              className="flex items-center gap-2 text-zinc-500 hover:text-sky-400 transition-colors"
+              title="Post to X"
+            >
+              <Share2 className="h-4 w-4" />
+              <span className="text-xs font-bold uppercase tracking-wider">Post</span>
+            </button>
+          </div>
+
+          <div className={`text-[11px] font-black tabular-nums tracking-widest ${isOverLimit ? 'text-red-500' : 'text-zinc-600'}`}>
+            {characterCount}/280
+          </div>
         </div>
       </div>
-
-      {/* Error message */}
-      {refreshError && (
-        <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/30 rounded p-2">
-          {refreshError}
-        </div>
-      )}
-
-      {/* Action buttons */}
-      <div className="flex gap-2">
-        <Button
-          onClick={handleCopy}
-          variant="outline"
-          size="sm"
-          className="flex-1 border-emerald-500/30 hover:border-emerald-500 hover:bg-emerald-500/10 text-emerald-400"
-        >
-          {copied ? (
-            <>
-              <Check className="h-4 w-4 mr-2" />
-              Copied!
-            </>
-          ) : (
-            <>
-              <Copy className="h-4 w-4 mr-2" />
-              Copy
-            </>
-          )}
-        </Button>
-
-        <Button
-          onClick={handleRefresh}
-          disabled={refreshing}
-          variant="outline"
-          size="sm"
-          className="border-slate-600 hover:border-slate-500 hover:bg-slate-800 text-slate-300"
-          title="Generate a new tweet for this trend"
-        >
-          {refreshing ? (
-            <>
-              <RotateCw className="h-4 w-4 mr-2 animate-spin" />
-              Cooking...
-            </>
-          ) : (
-            <>
-              <RotateCw className="h-4 w-4 mr-2" />
-              Refresh
-            </>
-          )}
-        </Button>
-
-        <Button
-          onClick={handleShareToX}
-          variant="outline"
-          size="sm"
-          className="border-sky-500/30 hover:border-sky-500 hover:bg-sky-500/10 text-sky-400"
-          title="Post to X/Twitter"
-        >
-          <Share2 className="h-4 w-4" />
-        </Button>
-      </div>
-    </Card>
+    </div>
   );
 }
