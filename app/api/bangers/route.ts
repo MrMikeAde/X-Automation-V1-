@@ -82,12 +82,23 @@ export async function POST(request: NextRequest) {
           characterCount: result.characterCount,
         };
       } catch (error) {
-        console.error(`Failed for ${trendData.name}:`, error);
+        const errorMsg = error instanceof Error ? error.message : 'Generation failed';
+        console.error(`Failed for ${trendData.name}:`, errorMsg);
+
+        // If it's an auth error, we should probably let the user know more clearly
+        // but for parallel generation, we return a per-item error message
+        let displayError = 'Banger still loading. Tap refresh to cook it manually.';
+        if (errorMsg.includes('Invalid Groq API key')) {
+          displayError = 'Error: Invalid API Key. Check settings.';
+        } else if (errorMsg.includes('Rate limit')) {
+          displayError = 'Error: Rate limit reached. Try again later.';
+        }
+
         return {
           rank: index + 1,
           topic: trendData.name,
           tweetVolume: trendData.volume || 'Trending',
-          generatedTweet: 'Banger still loading. Tap refresh to cook it manually.',
+          generatedTweet: displayError,
           characterCount: 0,
         };
       }
