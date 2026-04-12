@@ -9,8 +9,9 @@ No bots. No generic AI vibes. Just fire tweets ready for your timeline.
 ## 🚀 Key Features
 
 - **Real-Time Trends:** Resilient multi-source scraper (Cheerio-based) that pulls live trending topics across Nigeria.
-- **Authentic Naija Persona:** Specialized prompt engineering ensures the generated content sounds like a real person, using local slang and culturally relevant context.
-- **Extreme Speed:** Leverages Groq for near-instant AI inference, generating all 10 bangers in parallel.
+- **Authentic Naija Persona:** Specialized prompt engineering ensures the generated content sounds like a real person with a mix of "cruise," "bants," and "serious man" takes.
+- **Random Viral Tweet Generator:** A dedicated feature that generates 20 original, high-engagement tweets across 10 psychological, stoic, and life-check topics.
+- **Extreme Speed:** Optimized for serverless environments (like Netlify) using Groq's `llama-3.1-8b-instant` model for lightning-fast results.
 - **Privacy-Centric:** Your API keys are stored locally in your browser (localStorage), never on a server.
 - **Clean X Aesthetic:** A minimalist, high-contrast black and white UI designed for focus and ease of use.
 - **Streamlined Workflow:** One-click copy for individual tweets or the entire list, with direct "Share to X" integration.
@@ -20,7 +21,7 @@ No bots. No generic AI vibes. Just fire tweets ready for your timeline.
 - **Framework:** [Next.js](https://nextjs.org/) (App Router)
 - **Language:** TypeScript
 - **Styling:** Tailwind CSS (Strict Black & White Theme)
-- **AI Inference:** [Groq SDK](https://groq.com/) (Mixtral-8x7b)
+- **AI Inference:** [Groq SDK](https://groq.com/) (Llama 3.1 8B Instant)
 - **Scraping:** Cheerio
 - **Icons:** Lucide React
 
@@ -53,11 +54,11 @@ You need a Groq API key to generate tweets. You can get one for free at [console
 
 ## 🌐 Deployment
 
-This application is optimized for deployment on [Vercel](https://vercel.com).
+This application is optimized for deployment on [Netlify](https://netlify.com) and [Vercel](https://vercel.com).
 
 1. Push your code to a GitHub repository.
-2. Connect the repository to Vercel.
-3. Your app is live!
+2. Connect the repository to your chosen platform.
+3. The app is pre-configured to stay within standard serverless execution limits (10s).
 
 ## 📖 How it Works
 
