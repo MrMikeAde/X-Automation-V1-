@@ -21,6 +21,7 @@ export default function Page() {
   const [toast, setToast] = useState<string | null>(null);
   const [copiedAllTrends, setCopiedAllTrends] = useState(false);
   const [copiedAllRandom, setCopiedAllRandom] = useState(false);
+  const [copiedBTC, setCopiedBTC] = useState(false);
 
   // Load Groq key and saved tweets from localStorage on mount
   useEffect(() => {
@@ -169,6 +170,17 @@ export default function Page() {
       }
     } catch (error) {
       console.error('Failed to copy all:', error);
+    }
+  };
+
+  const handleCopyBTC = async () => {
+    try {
+      await navigator.clipboard.writeText('BTC -0XTEY');
+      setCopiedBTC(true);
+      showToast('BTC address copied');
+      setTimeout(() => setCopiedBTC(false), 2000);
+    } catch (error) {
+      console.error('Failed to copy BTC:', error);
     }
   };
 
@@ -431,10 +443,27 @@ export default function Page() {
           </TabsContent>
         </Tabs>
 
-        <footer className="mt-20 pt-8 border-t border-zinc-900 text-center">
-          <p className="text-zinc-600 text-xs font-bold uppercase tracking-widest">
+        <footer className="mt-20 pt-8 border-t border-zinc-900 text-center pb-12">
+          <p className="text-zinc-600 text-xs font-bold uppercase tracking-widest mb-4">
             Built for Naija Twitter • Powered by Groq
           </p>
+          <div className="flex flex-col items-center gap-4">
+            <a
+              href="https://github.com/MrMikeAde"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-zinc-400 hover:text-white text-sm font-medium transition-colors"
+            >
+              Follow @MrMikeAde
+            </a>
+            <button
+              onClick={handleCopyBTC}
+              className="text-zinc-500 hover:text-zinc-300 text-[10px] font-mono tracking-tighter uppercase flex items-center gap-2 bg-zinc-950 px-3 py-1.5 rounded-full border border-zinc-900 transition-all active:scale-95"
+            >
+              Support: {copiedBTC ? 'Address Copied' : 'BTC -0XTEY'}
+              {copiedBTC ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+            </button>
+          </div>
         </footer>
       </div>
     </div>
