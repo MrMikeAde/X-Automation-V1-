@@ -5,14 +5,18 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { TrendCard } from '@/components/TrendCard';
+import { RandomTweetCard } from '@/components/RandomTweetCard';
 import { Trend, BangersResponse } from '@/lib/types';
-import { Settings, RotateCw, Copy, Check } from 'lucide-react';
+import { Settings, RotateCw, Copy, Check, Sparkles } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Page() {
   const [groqKey, setGroqKey] = useState('');
   const [showSettings, setShowSettings] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [randomLoading, setRandomLoading] = useState(false);
   const [trends, setTrends] = useState<Trend[]>([]);
+  const [randomTweets, setRandomTweets] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [copiedAll, setCopiedAll] = useState(false);
@@ -82,16 +86,54 @@ export default function Page() {
     }
   };
 
+  const handleFetchRandom = async () => {
+    setError(null);
+    setRandomTweets([]);
+
+    if (!groqKey.trim()) {
+      setError('Please configure your Groq API key in settings.');
+      setShowSettings(true);
+      return;
+    }
+
+    setRandomLoading(true);
+    try {
+      const response = await fetch('/api/random', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          groqApiKey: groqKey,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json() as { error?: string };
+        throw new Error(errorData.error || 'Failed to fetch random tweets');
+      }
+
+      const data = await response.json();
+      setRandomTweets(data.tweets);
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Something went wrong. Please try again.';
+      setError(message);
+    } finally {
+      setRandomLoading(false);
+    }
+  };
+
   const handleUpdateTrend = (updatedTrend: Trend) => {
     setTrends((prevTrends) =>
       prevTrends.map((t) => (t.rank === updatedTrend.rank ? updatedTrend : t))
     );
   };
 
-  const handleCopyAll = async () => {
-    const allTweets = trends
-      .map((t) => t.generatedTweet)
-      .join('\n\n');
+  const handleCopyAll = async (type: 'trends' | 'random') => {
+    const allTweets = type === 'trends'
+      ? trends.map((t) => t.generatedTweet).join('\n\n')
+      : randomTweets.join('\n\n');
 
     try {
       await navigator.clipboard.writeText(allTweets);
@@ -191,79 +233,175 @@ export default function Page() {
           </Button>
         </header>
 
-        {/* Hero / Action Section */}
-        <section className="mb-12">
-          <div className="space-y-6">
-            <p className="text-xl text-zinc-300 leading-relaxed">
-              Skip the generic AI vibes. Get real Naija pidgin and street-smart commentary on the latest local trends, ready for your timeline.
-            </p>
-            <Button
-              onClick={handleFetchTrends}
-              disabled={loading}
-              className="w-full h-14 bg-white text-black hover:bg-zinc-200 text-lg font-black rounded-full transition-all active:scale-[0.98]"
+        <Tabs defaultValue="trends" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 bg-zinc-950 border border-zinc-900 p-1 h-12 rounded-full mb-8">
+            <TabsTrigger
+              value="trends"
+              className="rounded-full data-[state=active]:bg-zinc-800 data-[state=active]:text-white font-bold"
             >
-              {loading ? (
-                <>
-                  <RotateCw className="h-5 w-5 mr-3 animate-spin" />
-                  Analyzing trends...
-                </>
-              ) : (
-                'Generate Today\'s Bangers'
-              )}
-            </Button>
-          </div>
-        </section>
+              Nigeria Trends
+            </TabsTrigger>
+            <TabsTrigger
+              value="random"
+              className="rounded-full data-[state=active]:bg-zinc-800 data-[state=active]:text-white font-bold"
+            >
+              Random Tweets
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Error Message */}
-        {error && (
-          <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-2xl mb-8">
-            <p className="text-sm text-zinc-400">
-              <span className="font-bold text-white mr-2">Note:</span> {error}
-            </p>
-          </div>
-        )}
+          <TabsContent value="trends" className="mt-0 focus-visible:outline-none">
+            {/* Hero / Action Section */}
+            <section className="mb-12">
+              <div className="space-y-6">
+                <p className="text-xl text-zinc-300 leading-relaxed">
+                  Skip the generic AI vibes. Get real Naija pidgin and street-smart commentary on the latest local trends.
+                </p>
+                <Button
+                  onClick={handleFetchTrends}
+                  disabled={loading}
+                  className="w-full h-14 bg-white text-black hover:bg-zinc-200 text-lg font-black rounded-full transition-all active:scale-[0.98]"
+                >
+                  {loading ? (
+                    <>
+                      <RotateCw className="h-5 w-5 mr-3 animate-spin" />
+                      Analyzing trends...
+                    </>
+                  ) : (
+                    'Generate Today\'s Bangers'
+                  )}
+                </Button>
+              </div>
+            </section>
 
-        {/* Results Section */}
-        {trends.length > 0 && (
-          <div className="space-y-8">
-            <div className="flex items-center justify-between sticky top-0 py-4 bg-black/80 backdrop-blur-md z-10 border-b border-zinc-900">
-              <h2 className="text-lg font-bold">Nigeria Trends</h2>
-              <Button
-                onClick={handleCopyAll}
-                variant="ghost"
-                size="sm"
-                className="text-zinc-500 hover:text-white font-bold"
-              >
-                {copiedAll ? (
-                  <Check className="h-4 w-4 mr-2" />
-                ) : (
-                  <Copy className="h-4 w-4 mr-2" />
-                )}
-                {copiedAll ? 'Copied' : 'Copy All'}
-              </Button>
-            </div>
-            <div className="space-y-px bg-zinc-900 border-x border-zinc-900">
-              {trends.map((trend) => (
-                <TrendCard
-                  key={trend.rank}
-                  trend={trend}
-                  groqApiKey={groqKey}
-                  onCopied={() => showToast('Copied to clipboard')}
-                  onRefreshed={handleUpdateTrend}
-                />
-              ))}
-            </div>
-          </div>
-        )}
+            {/* Error Message */}
+            {error && (
+              <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-2xl mb-8">
+                <p className="text-sm text-zinc-400">
+                  <span className="font-bold text-white mr-2">Note:</span> {error}
+                </p>
+              </div>
+            )}
 
-        {/* Empty State */}
-        {!loading && trends.length === 0 && !error && (
-          <div className="py-20 text-center border border-dashed border-zinc-800 rounded-3xl">
-            <p className="text-zinc-500 font-medium">
-              No trends loaded yet. Tap the button above to start.
-            </p>
-          </div>
-        )}
+            {/* Results Section */}
+            {trends.length > 0 && (
+              <div className="space-y-8">
+                <div className="flex items-center justify-between sticky top-0 py-4 bg-black/80 backdrop-blur-md z-10 border-b border-zinc-900">
+                  <h2 className="text-lg font-bold">Nigeria Trends</h2>
+                  <Button
+                    onClick={() => handleCopyAll('trends')}
+                    variant="ghost"
+                    size="sm"
+                    className="text-zinc-500 hover:text-white font-bold"
+                  >
+                    {copiedAll ? (
+                      <Check className="h-4 w-4 mr-2" />
+                    ) : (
+                      <Copy className="h-4 w-4 mr-2" />
+                    )}
+                    {copiedAll ? 'Copied' : 'Copy All'}
+                  </Button>
+                </div>
+                <div className="space-y-px bg-zinc-900 border-x border-zinc-900 overflow-hidden rounded-2xl border border-zinc-900">
+                  {trends.map((trend) => (
+                    <TrendCard
+                      key={trend.rank}
+                      trend={trend}
+                      groqApiKey={groqKey}
+                      onCopied={() => showToast('Copied to clipboard')}
+                      onRefreshed={handleUpdateTrend}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {!loading && trends.length === 0 && !error && (
+              <div className="py-20 text-center border border-dashed border-zinc-800 rounded-3xl">
+                <p className="text-zinc-500 font-medium">
+                  No trends loaded yet. Tap the button above to start.
+                </p>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="random" className="mt-0 focus-visible:outline-none">
+             {/* Hero / Action Section */}
+             <section className="mb-12">
+              <div className="space-y-6">
+                <p className="text-xl text-zinc-300 leading-relaxed">
+                  Generate 20 high-level viral tweets about life, psychology, and mindset reframes.
+                </p>
+                <Button
+                  onClick={handleFetchRandom}
+                  disabled={randomLoading}
+                  className="w-full h-14 bg-white text-black hover:bg-zinc-200 text-lg font-black rounded-full transition-all active:scale-[0.98]"
+                >
+                  {randomLoading ? (
+                    <>
+                      <RotateCw className="h-5 w-5 mr-3 animate-spin" />
+                      Cooking 20 bangers...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-5 w-5 mr-3" />
+                      Generate Today's Random
+                    </>
+                  )
+                  }
+                </Button>
+              </div>
+            </section>
+
+            {/* Error Message */}
+            {error && (
+              <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-2xl mb-8">
+                <p className="text-sm text-zinc-400">
+                  <span className="font-bold text-white mr-2">Note:</span> {error}
+                </p>
+              </div>
+            )}
+
+            {/* Results Section */}
+            {randomTweets.length > 0 && (
+              <div className="space-y-8">
+                <div className="flex items-center justify-between sticky top-0 py-4 bg-black/80 backdrop-blur-md z-10 border-b border-zinc-900">
+                  <h2 className="text-lg font-bold">Random Viral Tweets</h2>
+                  <Button
+                    onClick={() => handleCopyAll('random')}
+                    variant="ghost"
+                    size="sm"
+                    className="text-zinc-500 hover:text-white font-bold"
+                  >
+                    {copiedAll ? (
+                      <Check className="h-4 w-4 mr-2" />
+                    ) : (
+                      <Copy className="h-4 w-4 mr-2" />
+                    )}
+                    {copiedAll ? 'Copied' : 'Copy All'}
+                  </Button>
+                </div>
+                <div className="space-y-px bg-zinc-900 border-x border-zinc-900 overflow-hidden rounded-2xl border border-zinc-900">
+                  {randomTweets.map((tweet, i) => (
+                    <RandomTweetCard
+                      key={i}
+                      index={i}
+                      tweet={tweet}
+                      onCopied={() => showToast('Copied to clipboard')}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {!randomLoading && randomTweets.length === 0 && !error && (
+              <div className="py-20 text-center border border-dashed border-zinc-800 rounded-3xl">
+                <p className="text-zinc-500 font-medium">
+                  Nothing here yet. Tap the button above to generate 20 random bangers.
+                </p>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
 
         <footer className="mt-20 pt-8 border-t border-zinc-900 text-center">
           <p className="text-zinc-600 text-xs font-bold uppercase tracking-widest">
