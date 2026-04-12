@@ -19,12 +19,31 @@ export default function Page() {
   const [randomTweets, setRandomTweets] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
-  const [copiedAll, setCopiedAll] = useState(false);
+  const [copiedAllTrends, setCopiedAllTrends] = useState(false);
+  const [copiedAllRandom, setCopiedAllRandom] = useState(false);
 
-  // Load Groq key from localStorage on mount
+  // Load Groq key and saved tweets from localStorage on mount
   useEffect(() => {
     const savedGroqKey = localStorage.getItem('groq_key');
     if (savedGroqKey) setGroqKey(savedGroqKey);
+
+    const savedTrends = localStorage.getItem('last_trends');
+    if (savedTrends) {
+      try {
+        setTrends(JSON.parse(savedTrends));
+      } catch (e) {
+        console.error('Failed to parse saved trends', e);
+      }
+    }
+
+    const savedRandom = localStorage.getItem('last_random');
+    if (savedRandom) {
+      try {
+        setRandomTweets(JSON.parse(savedRandom));
+      } catch (e) {
+        console.error('Failed to parse saved random tweets', e);
+      }
+    }
   }, []);
 
   const handleSaveKeys = () => {
@@ -75,6 +94,7 @@ export default function Page() {
 
       const data = (await response.json()) as BangersResponse;
       setTrends(data.trends);
+      localStorage.setItem('last_trends', JSON.stringify(data.trends));
     } catch (err) {
       const message =
         err instanceof Error
@@ -113,6 +133,7 @@ export default function Page() {
 
       const data = await response.json();
       setRandomTweets(data.tweets);
+      localStorage.setItem('last_random', JSON.stringify(data.tweets));
     } catch (err) {
       const message =
         err instanceof Error
@@ -125,9 +146,11 @@ export default function Page() {
   };
 
   const handleUpdateTrend = (updatedTrend: Trend) => {
-    setTrends((prevTrends) =>
-      prevTrends.map((t) => (t.rank === updatedTrend.rank ? updatedTrend : t))
-    );
+    setTrends((prevTrends) => {
+      const newTrends = prevTrends.map((t) => (t.rank === updatedTrend.rank ? updatedTrend : t));
+      localStorage.setItem('last_trends', JSON.stringify(newTrends));
+      return newTrends;
+    });
   };
 
   const handleCopyAll = async (type: 'trends' | 'random') => {
@@ -137,8 +160,13 @@ export default function Page() {
 
     try {
       await navigator.clipboard.writeText(allTweets);
-      setCopiedAll(true);
-      setTimeout(() => setCopiedAll(false), 2000);
+      if (type === 'trends') {
+        setCopiedAllTrends(true);
+        setTimeout(() => setCopiedAllTrends(false), 2000);
+      } else {
+        setCopiedAllRandom(true);
+        setTimeout(() => setCopiedAllRandom(false), 2000);
+      }
     } catch (error) {
       console.error('Failed to copy all:', error);
     }
@@ -293,12 +321,12 @@ export default function Page() {
                     size="sm"
                     className="text-zinc-500 hover:text-white font-bold"
                   >
-                    {copiedAll ? (
+                    {copiedAllTrends ? (
                       <Check className="h-4 w-4 mr-2" />
                     ) : (
                       <Copy className="h-4 w-4 mr-2" />
                     )}
-                    {copiedAll ? 'Copied' : 'Copy All'}
+                    {copiedAllTrends ? 'Copied' : 'Copy All'}
                   </Button>
                 </div>
                 <div className="space-y-px bg-zinc-900 border-x border-zinc-900 overflow-hidden rounded-2xl border border-zinc-900">
@@ -372,12 +400,12 @@ export default function Page() {
                     size="sm"
                     className="text-zinc-500 hover:text-white font-bold"
                   >
-                    {copiedAll ? (
+                    {copiedAllRandom ? (
                       <Check className="h-4 w-4 mr-2" />
                     ) : (
                       <Copy className="h-4 w-4 mr-2" />
                     )}
-                    {copiedAll ? 'Copied' : 'Copy All'}
+                    {copiedAllRandom ? 'Copied' : 'Copy All'}
                   </Button>
                 </div>
                 <div className="space-y-px bg-zinc-900 border-x border-zinc-900 overflow-hidden rounded-2xl border border-zinc-900">
