@@ -6,7 +6,7 @@ export interface GeneratedTweet {
 }
 
 const TWITTER_CHAR_LIMIT = 280;
-const GROQ_TIMEOUT_MS = 30000;
+const GROQ_TIMEOUT_MS = 5000;
 
 export async function generateNaijaTweet(
   topic: string,
@@ -42,7 +42,7 @@ Output ONLY the tweet text. No "TWEET:" prefix.`;
 
   try {
     const chatCompletion = await groq.chat.completions.create({
-      model: 'mixtral-8x7b-32768',
+      model: 'llama-3.1-8b-instant',
       messages: [
         {
           role: 'system',

@@ -18,12 +18,12 @@ export async function getNigeriaTrends(): Promise<ScrapedTrend[]> {
     {
       url: 'https://getdaytrends.com/nigeria/',
       parser: parseGetDayTrends,
-      timeout: 8000,
+      timeout: 3000,
     },
     {
       url: 'https://trends24.in/nigeria/',
       parser: parseTrends24,
-      timeout: 8000,
+      timeout: 3000,
     },
   ];
 
