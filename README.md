@@ -1,76 +1,88 @@
-# NaijaTrendBanger
+# NaijaTrendBanger 🔥
 
-**Authentic Nigerian trends transformed into viral posts in seconds.**
+**The ultimate viral-ready open-source template for Nigerian social media builders.**
 
-NaijaTrendBanger is a high-performance web application that identifies the top trending topics in Nigeria and uses the Groq LPU™ Inference Engine to craft high-engagement tweets in authentic Nigerian pidgin and street-smart commentary.
+NaijaTrendBanger is a high-performance, minimalist web application that transforms live Nigerian trending topics into high-engagement "bangers." Powered by the Groq LPU™ Inference Engine, it delivers authentic pidgin, cruise, and street-smart commentary in milliseconds.
 
-No bots. No generic AI vibes. Just fire tweets ready for your timeline.
-
-## 🚀 Key Features
-
-- **Real-Time Trends:** Resilient multi-source scraper (Cheerio-based) that pulls live trending topics across Nigeria.
-- **Authentic Naija Persona:** Specialized prompt engineering ensures the generated content sounds like a real person with a mix of "cruise," "bants," and "serious man" takes.
-- **Random Viral Tweet Generator:** A dedicated feature that generates 20 original, high-engagement tweets across 10 psychological, stoic, and life-check topics.
-- **Extreme Speed:** Optimized for serverless environments (like Netlify) using Groq's `llama-3.1-8b-instant` model for lightning-fast results.
-- **Privacy-Centric:** Your API keys are stored locally in your browser (localStorage), never on a server.
-- **Clean X Aesthetic:** A minimalist, high-contrast black and white UI designed for focus and ease of use.
-- **Streamlined Workflow:** One-click copy for individual tweets or the entire list, with direct "Share to X" integration.
-
-## 🛠️ Tech Stack
-
-- **Framework:** [Next.js](https://nextjs.org/) (App Router)
-- **Language:** TypeScript
-- **Styling:** Tailwind CSS (Strict Black & White Theme)
-- **AI Inference:** [Groq SDK](https://groq.com/) (Llama 3.1 8B Instant)
-- **Scraping:** Cheerio
-- **Icons:** Lucide React
-
-## ⚡ Why Groq?
-
-NaijaTrendBanger uses Groq because it is the fastest inference engine available today. For a tool meant to capture "the moment," speed is everything. Groq allows us to fetch trends and generate 10 unique, high-quality tweets in less than 2 seconds.
-
-## 🏁 Getting Started
-
-### Prerequisites
-
-You need a Groq API key to generate tweets. You can get one for free at [console.groq.com](https://console.groq.com/keys).
-
-### Installation
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/your-username/naija-trend-banger.git
-   ```
-2. Install dependencies:
-   ```bash
-   pnpm install
-   ```
-3. Start the development server:
-   ```bash
-   pnpm dev
-   ```
-4. Open [http://localhost:3000](http://localhost:3000) in your browser.
-5. Click the settings icon (⚙️) to save your Groq API key.
-
-## 🌐 Deployment
-
-This application is optimized for deployment on [Netlify](https://netlify.com) and [Vercel](https://vercel.com).
-
-1. Push your code to a GitHub repository.
-2. Connect the repository to your chosen platform.
-3. The app is pre-configured to stay within standard serverless execution limits (10s).
-
-## 📖 How it Works
-
-1. **Scrape:** The app fetches the latest trends from public Nigerian trend aggregators.
-2. **Process:** Using Cheerio, it extracts the most relevant topics and their current engagement volume.
-3. **Parallel Generation:** The topics are sent to Groq simultaneously. A specialized system prompt ensures the "Naija" tone is authentic and engaging.
-4. **Display:** Trends are presented in a clean feed, ready for you to copy and post.
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+> [!IMPORTANT]
+> This is a **proper viral-ready open-source template**. It is designed for developers, creators, and social media enthusiasts who want a clean, fast, and highly customizable foundation for AI-driven content generation.
 
 ---
 
-Built for the Naija community. Powered by **Groq**.
+## 🚀 Key Features
+
+### 🇳🇬 Nigeria Trends Master
+A resilient multi-source scraper (Cheerio-based) that identifies what's hot in Nigeria right now and generates 10 unique takes instantly.
+
+### 🧠 Random Viral Generator
+Not just trends—generate 20 original, psychological, and stoic "life-check" tweets across 10 specific topics designed for maximum reach.
+
+### ⚡ Blistering Performance
+Optimized for serverless environments (Netlify/Vercel) using `llama-3.1-8b-instant`. We capture "the moment" before it passes.
+
+### 🖤 X-Inspired Aesthetic
+A minimalist, high-contrast black-and-white UI. Zero fluff. Just focus.
+
+### 🛡️ Privacy First
+Your Groq API keys stay in your browser (`localStorage`). We don't see them, and we don't store them.
+
+---
+
+## 🛠️ The Tech Stack
+
+- **Framework:** Next.js (App Router)
+- **AI Inference:** [Groq SDK](https://groq.com/)
+- **Styling:** Tailwind CSS + Radix UI
+- **Logic:** TypeScript + Cheerio Scraping
+- **Caching:** In-memory LRU Cache for trends
+
+---
+
+## 🏁 Fast Track: Getting Started
+
+### 1. Prerequisites
+Get a free Groq API key at [console.groq.com](https://console.groq.com/keys).
+
+### 2. Setup
+```bash
+# Clone the repo
+git clone https://github.com/MrMikeAde/naija-trend-banger.git
+
+# Install with pnpm
+pnpm install
+
+# Run dev
+pnpm dev
+```
+
+### 3. Usage
+Open [http://localhost:3000](http://localhost:3000), hit the **Settings** (⚙️) icon, paste your key, and start generating.
+
+---
+
+## 🌐 Deploy to Production
+
+This template is fully optimized for **Netlify** and **Vercel** serverless functions with a 10s timeout limit.
+
+1. Push your code to GitHub.
+2. Link your repo to Netlify/Vercel.
+3. Done. It's that simple.
+
+---
+
+## 🤝 Support & Contribution
+
+NaijaTrendBanger is open-source. Feel free to fork, star, and contribute.
+
+- **GitHub:** [@MrMikeAde](https://github.com/MrMikeAde)
+- **Support the Project (BTC):** `0XTEY`
+
+---
+
+## 📄 License
+
+MIT License. See [LICENSE](LICENSE) for details.
+
+---
+
+*Built for the culture. Powered by **Groq**.*
