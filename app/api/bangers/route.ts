@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getNigeriaTrends } from '@/lib/scraper';
-import { generateNaijaTweet } from '@/lib/groq';
+import { getWorldwideTrends } from '@/lib/scraper';
+import { generateGlobalTweet } from '@/lib/groq';
 import { BangersRequest, BangersResponse, Trend } from '@/lib/types';
 import { validateGroqApiKey } from '@/lib/validation';
 import { LRUCache } from 'lru-cache';
@@ -46,10 +46,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Check trends cache
-    let scrapedTrends = trendsCache.get('nigeria_trends');
+    let scrapedTrends = trendsCache.get('worldwide_trends');
     if (!scrapedTrends) {
-      scrapedTrends = await getNigeriaTrends();
-      trendsCache.set('nigeria_trends', scrapedTrends);
+      scrapedTrends = await getWorldwideTrends();
+      trendsCache.set('worldwide_trends', scrapedTrends);
     }
 
     if (!scrapedTrends || scrapedTrends.length === 0) {
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check tweets cache (using hash of trends + apiKey to distinguish users)
-    const cacheKey = `tweets_${scrapedTrends.map((t: any) => t.name).join('_').substring(0, 100)}_${groqApiKey.substring(0, 10)}`;
+    const cacheKey = `tweets_global_${scrapedTrends.map((t: any) => t.name).join('_').substring(0, 100)}_${groqApiKey.substring(0, 10)}`;
     const cachedTweets = tweetsCache.get(cacheKey);
     if (cachedTweets) {
       return NextResponse.json({
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
     // Parallel tweet generation
     const tweetPromises = scrapedTrends.map(async (trendData: any, index: number) => {
       try {
-        const result = await generateNaijaTweet(trendData.name, groqApiKey);
+        const result = await generateGlobalTweet(trendData.name, groqApiKey);
         return {
           rank: index + 1,
           topic: trendData.name,

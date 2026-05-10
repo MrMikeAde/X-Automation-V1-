@@ -6,8 +6,8 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'NaijaTrendBanger 🔥',
-  description: 'Fetch hot Nigerian trends and generate Naija-style viral tweets in seconds',
+  title: 'TrendBanger 🔥 • Worldwide Edition',
+  description: 'Fetch hot worldwide trends and generate global-style viral tweets in seconds',
   icons: {
     icon: [
       { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },

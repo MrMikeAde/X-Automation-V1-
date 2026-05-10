@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateNaijaTweet, GeneratedTweet } from '@/lib/groq';
+import { generateGlobalTweet, GeneratedTweet } from '@/lib/groq';
 import { validateGroqApiKey } from '@/lib/validation';
 import {
   checkRateLimit,
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
 
     // Generate new tweet for the topic
     try {
-      const result = await generateNaijaTweet(topic, groqApiKey);
+      const result = await generateGlobalTweet(topic, groqApiKey);
 
       const response: RefreshResponse = {
         success: true,
