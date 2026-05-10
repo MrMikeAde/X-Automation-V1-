@@ -257,10 +257,10 @@ export default function Page() {
         <header className="flex items-start justify-between mb-12">
           <div>
             <h1 className="text-3xl font-black tracking-tight mb-2">
-              NaijaTrendBanger
+              TrendBanger <span className="text-sm font-medium bg-white text-black px-2 py-0.5 rounded-full align-middle ml-2">Worldwide</span>
             </h1>
             <p className="text-zinc-500 font-medium">
-              Authentic Nigerian trends transformed into viral posts.
+              Global trends transformed into viral, savage takes.
             </p>
           </div>
           <Button
@@ -279,13 +279,13 @@ export default function Page() {
               value="trends"
               className="rounded-full data-[state=active]:bg-zinc-800 data-[state=active]:text-white font-bold"
             >
-              Nigeria Trends
+              Worldwide Trends
             </TabsTrigger>
             <TabsTrigger
               value="random"
               className="rounded-full data-[state=active]:bg-zinc-800 data-[state=active]:text-white font-bold"
             >
-              Random Tweets
+              Global Random
             </TabsTrigger>
           </TabsList>
 
@@ -294,7 +294,7 @@ export default function Page() {
             <section className="mb-12">
               <div className="space-y-6">
                 <p className="text-xl text-zinc-300 leading-relaxed">
-                  Skip the generic AI vibes. Get real Naija pidgin and street-smart commentary on the latest local trends.
+                  Skip the generic AI vibes. Get real, sharp-witted global commentary on the latest worldwide trends.
                 </p>
                 <Button
                   onClick={handleFetchTrends}
@@ -304,10 +304,10 @@ export default function Page() {
                   {loading ? (
                     <>
                       <RotateCw className="h-5 w-5 mr-3 animate-spin" />
-                      Analyzing trends...
+                      Analyzing Global Trends...
                     </>
                   ) : (
-                    'Generate Today\'s Bangers'
+                    'Generate Worldwide Bangers'
                   )}
                 </Button>
               </div>
@@ -326,7 +326,7 @@ export default function Page() {
             {trends.length > 0 && (
               <div className="space-y-8">
                 <div className="flex items-center justify-between sticky top-0 py-4 bg-black/80 backdrop-blur-md z-10 border-b border-zinc-900">
-                  <h2 className="text-lg font-bold">Nigeria Trends</h2>
+                  <h2 className="text-lg font-bold">Worldwide Trends</h2>
                   <Button
                     onClick={() => handleCopyAll('trends')}
                     variant="ghost"
@@ -369,7 +369,7 @@ export default function Page() {
              <section className="mb-12">
               <div className="space-y-6">
                 <p className="text-xl text-zinc-300 leading-relaxed">
-                  Generate 20 high-level viral tweets about life, psychology, and mindset reframes.
+                  Generate 20 high-level viral tweets about life, psychology, and mindset reframes with a global edge.
                 </p>
                 <Button
                   onClick={handleFetchRandom}
@@ -384,7 +384,7 @@ export default function Page() {
                   ) : (
                     <>
                       <Sparkles className="h-5 w-5 mr-3" />
-                      Generate Today's Random
+                      Generate Global Random
                     </>
                   )
                   }
@@ -405,7 +405,7 @@ export default function Page() {
             {randomTweets.length > 0 && (
               <div className="space-y-8">
                 <div className="flex items-center justify-between sticky top-0 py-4 bg-black/80 backdrop-blur-md z-10 border-b border-zinc-900">
-                  <h2 className="text-lg font-bold">Random Viral Tweets</h2>
+                  <h2 className="text-lg font-bold">Global Random Tweets</h2>
                   <Button
                     onClick={() => handleCopyAll('random')}
                     variant="ghost"
@@ -445,7 +445,7 @@ export default function Page() {
 
         <footer className="mt-20 pt-8 border-t border-zinc-900 text-center pb-12">
           <p className="text-zinc-600 text-xs font-bold uppercase tracking-widest mb-4">
-            Built for Naija Twitter • Powered by Groq
+            Worldwide Edition • Global Tone • Powered by Groq
           </p>
           <div className="flex flex-col items-center gap-4">
             <a

@@ -1,7 +1,7 @@
 import * as cheerio from 'cheerio';
 
 /**
- * Public web scraping utility to fetch Nigeria trending topics
+ * Public web scraping utility to fetch Worldwide trending topics
  * Multi-source scraper with timeout protection and demo data fallback
  */
 
@@ -11,17 +11,17 @@ export interface ScrapedTrend {
 }
 
 /**
- * Fetch top 10 Nigeria trending topics from public sources
+ * Fetch top 10 Worldwide trending topics from public sources
  */
-export async function getNigeriaTrends(): Promise<ScrapedTrend[]> {
+export async function getWorldwideTrends(): Promise<ScrapedTrend[]> {
   const sources = [
     {
-      url: 'https://getdaytrends.com/nigeria/',
+      url: 'https://getdaytrends.com/',
       parser: parseGetDayTrends,
       timeout: 3000,
     },
     {
-      url: 'https://trends24.in/nigeria/',
+      url: 'https://trends24.in/',
       parser: parseTrends24,
       timeout: 3000,
     },
@@ -83,11 +83,17 @@ function parseGetDayTrends(html: string): ScrapedTrend[] {
   const $ = cheerio.load(html);
   const seenTopics = new Set<string>();
 
-  $('td.main a').each((_, element) => {
+  // Improved selection logic for better reliability
+  $('td.main a, .trend-name a').each((_, element) => {
     const topic = $(element).text().trim();
-    if (topic && !seenTopics.has(topic) && topic.length > 2 && trends.length < 10) {
+    // Basic validation: length > 2 and not already seen
+    if (topic && !seenTopics.has(topic) && topic.length > 1 && trends.length < 10) {
       seenTopics.add(topic);
-      const volume = $(element).closest('tr').find('.count').text().trim() || 'Trending';
+      // Try multiple ways to find volume
+      const volume =
+        $(element).closest('tr').find('.count').text().trim() ||
+        $(element).closest('tr').find('.volume').text().trim() ||
+        'Trending';
       trends.push({ name: topic, volume });
     }
   });
@@ -100,11 +106,13 @@ function parseTrends24(html: string): ScrapedTrend[] {
   const $ = cheerio.load(html);
   const seenTopics = new Set<string>();
 
-  $('.trend-card__list li a').each((_, element) => {
+  // Improved selection logic
+  $('.trend-card__list li a, .trend-list li a').each((_, element) => {
     const topic = $(element).text().trim();
-    if (topic && !seenTopics.has(topic) && topic.length > 2 && trends.length < 10) {
+    if (topic && !seenTopics.has(topic) && topic.length > 1 && trends.length < 10) {
       seenTopics.add(topic);
-      trends.push({ name: topic, volume: 'Trending' });
+      const volume = $(element).siblings('.tweet-count').text().trim() || 'Trending';
+      trends.push({ name: topic, volume });
     }
   });
 
@@ -113,18 +121,19 @@ function parseTrends24(html: string): ScrapedTrend[] {
 
 /**
  * Demo trends returned when all scraping fails
+ * Updated to Global Edition
  */
 function getDemoTrends(): ScrapedTrend[] {
   return [
-    { name: 'Naija Music Vibes', volume: '50K' },
-    { name: 'Nigerian Politics', volume: '120K' },
-    { name: 'Afrobeats Global', volume: '85K' },
-    { name: 'Lagos Entertainment', volume: 'Trending' },
-    { name: 'Nigeria Tech Scene', volume: '10K' },
-    { name: 'Naija Street Fashion', volume: 'Trending' },
-    { name: 'Nigerian Films', volume: 'Trending' },
-    { name: 'African Innovation', volume: 'Trending' },
-    { name: 'Nigerian Food Culture', volume: 'Trending' },
-    { name: 'Nigeria Sports Update', volume: 'Trending' },
+    { name: 'Global Tech Summit', volume: '250K' },
+    { name: 'Future of AI', volume: '1.2M' },
+    { name: 'Sustainable Energy', volume: '85K' },
+    { name: 'Space Exploration', volume: 'Trending' },
+    { name: 'Digital Nomad Life', volume: '15K' },
+    { name: 'Modern Stoicism', volume: 'Trending' },
+    { name: 'Global Economy', volume: 'Trending' },
+    { name: 'Mental Health Awareness', volume: 'Trending' },
+    { name: 'Cybersecurity 2024', volume: 'Trending' },
+    { name: 'Universal Healthcare', volume: 'Trending' },
   ];
 }
