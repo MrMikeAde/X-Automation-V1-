@@ -1,4 +1,5 @@
 import Groq from 'groq-sdk';
+import { StrategyDraft } from './types';
 
 export interface GeneratedTweet {
   text: string;
@@ -156,5 +157,72 @@ Output only the 20 tweets, numbered 1. to 20.`;
     const errorMsg = error instanceof Error ? error.message : 'Unknown error';
     console.error('Error generating random tweets:', errorMsg);
     throw new Error(`Random generation failed: ${errorMsg}`);
+  }
+}
+
+export async function generateGrowthStrategyDrafts(
+  apiKey: string,
+  context?: string
+): Promise<StrategyDraft[]> {
+  const groq = new Groq({
+    apiKey: apiKey,
+    dangerouslyAllowBrowser: true,
+    timeout: 25000,
+  });
+
+  const prompt = `You are an elite X/Twitter Growth Strategist for @On2Mike.
+Niche: Tech + Manchester United (#GGMU) + Pop Culture + Humor.
+Current Status: ~1k followers, approaching 5M impressions.
+Objective: 10k followers, high engagement, X monetization.
+
+Inspiration Accounts:
+- Football: @ManUtd, @UnitedStandMUFC (Mark Goldbridge style), @StretfordPaddock, @UtdDistrict, @JacobsBen.
+- Tech/Culture: Successful hybrid accounts blending sports passion with tech insights.
+
+Generate 10 high-quality post drafts for today.
+Content Mix:
+- 4 Posts: Manchester United / Football (Passionate, opinionated, matchday energy)
+- 3 Posts: Tech / AI (Insightful, mixing humor with technical depth)
+- 2 Posts: Pop Culture (Viral moments, witty commentary)
+- 1 Post: Personal / Relatable Humor (Daily struggles, sarcastic takes)
+
+Requirements for each post:
+1. Full post text (ready to copy, under 280 chars unless specified as a thread).
+2. Media type: Specific image/video/meme/poll description.
+3. Posting window: Best WAT (Nigeria Time) window.
+4. Strategy: Type of post (Original, Reply, Quote, Thread, Poll).
+5. Reasoning: Why it works for the 2025 X algorithm.
+
+${context ? `Current Context/Trends: ${context}` : ''}
+
+Output ONLY a JSON object with a "drafts" key containing an array of 10 objects with these keys:
+"id", "category", "text", "mediaType", "postingTime", "strategy", "reasoning".
+
+Tone: Witty, slightly sarcastic, confident, street-smart.`;
+
+  try {
+    const chatCompletion = await groq.chat.completions.create({
+      model: 'llama-3.1-8b-instant',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a JSON-only response bot. Always output valid JSON.',
+        },
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ],
+      max_tokens: 3000,
+      temperature: 0.7,
+      response_format: { type: 'json_object' },
+    });
+
+    const content = chatCompletion.choices[0]?.message?.content || '{"drafts": []}';
+    const parsed = JSON.parse(content);
+    return (parsed.drafts || []).slice(0, 10);
+  } catch (error) {
+    console.error('Error generating growth drafts:', error);
+    throw new Error('Growth strategy generation failed. Please try again.');
   }
 }

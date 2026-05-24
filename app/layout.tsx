@@ -6,8 +6,8 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'TrendBanger 🔥 • Worldwide Edition',
-  description: 'Fetch hot worldwide trends and generate global-style viral tweets in seconds',
+  title: 'On2Mike Strategist ⚡ • Growth Edition',
+  description: 'Daily viral growth plan and tweet drafts for @On2Mike. Tech, Manchester United, and Pop Culture growth engine powered by Groq.',
   icons: {
     icon: [
       { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
