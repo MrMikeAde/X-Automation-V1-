@@ -6,6 +6,16 @@ export interface Trend {
   characterCount?: number;
 }
 
+export interface StrategyDraft {
+  id: number;
+  text: string;
+  mediaType: string;
+  postingTime: string;
+  strategy: string;
+  reasoning: string;
+  category: 'Football' | 'Tech' | 'Pop Culture' | 'Humor';
+}
+
 export interface BangersResponse {
   success: boolean;
   timestamp: string;

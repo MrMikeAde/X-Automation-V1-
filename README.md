@@ -1,30 +1,27 @@
-# NaijaTrendBanger 🔥
+# On2Mike Strategist ⚡
 
-**The ultimate viral-ready open-source template for Nigerian social media builders.**
+**The ultimate X (Twitter) growth engine for @On2Mike.**
 
-NaijaTrendBanger is a high-performance, minimalist web application that transforms live Nigerian trending topics into high-engagement "bangers." Powered by the Groq LPU™ Inference Engine, it delivers authentic pidgin, cruise, and street-smart commentary in milliseconds.
-
-> [!IMPORTANT]
-> This is a **proper viral-ready open-source template**. It is designed for developers, creators, and social media enthusiasts who want a clean, fast, and highly customizable foundation for AI-driven content generation.
+On2Mike Strategist is a high-performance, minimalist web application designed to scale @On2Mike from 1k to 10k+ followers. Powered by the Groq LPU™ Inference Engine, it generates 10 high-quality, strategic post drafts daily, mixing Manchester United passion with Tech insights and Pop Culture vibes.
 
 ---
 
 ## 🚀 Key Features
 
-### 🇳🇬 Nigeria Trends Master
-A resilient multi-source scraper (Cheerio-based) that identifies what's hot in Nigeria right now and generates 10 unique takes instantly.
+### 📈 Growth Strategist
+Generates 10 daily drafts (40% Football, 30% Tech, 20% Pop Culture, 10% Humor) optimized for the 2025-2026 X algorithm. Includes media suggestions, timing (WAT), and specific engagement strategies.
 
-### 🧠 Random Viral Generator
-Not just trends—generate 20 original, psychological, and stoic "life-check" tweets across 10 specific topics designed for maximum reach.
+### 🇳🇬 Context Trends
+A resilient multi-source scraper that identifies what's hot right now to provide timely context for your growth plan.
+
+### 🧠 Vibe Check
+Generate 20 original, psychological, and stoic "life-check" tweets across 10 specific topics designed for maximum reach and personal branding.
 
 ### ⚡ Blistering Performance
-Optimized for serverless environments (Netlify/Vercel) using `llama-3.1-8b-instant`. We capture "the moment" before it passes.
+Optimized for serverless environments using `llama-3.1-8b-instant`. We capture "the moment" before it passes.
 
 ### 🖤 X-Inspired Aesthetic
-A minimalist, high-contrast black-and-white UI. Zero fluff. Just focus.
-
-### 🛡️ Privacy First
-Your Groq API keys stay in your browser (`localStorage`). We don't see them, and we don't store them.
+A minimalist, high-contrast black-and-white UI. Zero fluff. Just focus on growth.
 
 ---
 
@@ -34,7 +31,7 @@ Your Groq API keys stay in your browser (`localStorage`). We don't see them, and
 - **AI Inference:** [Groq SDK](https://groq.com/)
 - **Styling:** Tailwind CSS + Radix UI
 - **Logic:** TypeScript + Cheerio Scraping
-- **Caching:** In-memory LRU Cache for trends
+- **Caching:** In-memory LRU Cache for trends and strategies
 
 ---
 
@@ -55,24 +52,9 @@ pnpm install
 pnpm dev
 ```
 
-### 3. Usage
-Open [http://localhost:3000](http://localhost:3000), hit the **Settings** (⚙️) icon, paste your key, and start generating.
-
----
-
-## 🌐 Deploy to Production
-
-This template is fully optimized for **Netlify** and **Vercel** serverless functions with a 10s timeout limit.
-
-1. Push your code to GitHub.
-2. Link your repo to Netlify/Vercel.
-3. Done. It's that simple.
-
 ---
 
 ## 🤝 Support & Contribution
-
-NaijaTrendBanger is open-source. Feel free to fork, star, and contribute.
 
 - **GitHub:** [@MrMikeAde](https://github.com/MrMikeAde)
 - **Support the Project (BTC):** `0XTEY`

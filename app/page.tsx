@@ -6,8 +6,9 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { TrendCard } from '@/components/TrendCard';
 import { RandomTweetCard } from '@/components/RandomTweetCard';
-import { Trend, BangersResponse } from '@/lib/types';
-import { Settings, RotateCw, Copy, Check, Sparkles } from 'lucide-react';
+import { StrategyCard } from '@/components/StrategyCard';
+import { Trend, BangersResponse, StrategyDraft } from '@/lib/types';
+import { Settings, RotateCw, Copy, Check, Sparkles, TrendingUp, Zap } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Page() {
@@ -15,12 +16,15 @@ export default function Page() {
   const [showSettings, setShowSettings] = useState(false);
   const [loading, setLoading] = useState(false);
   const [randomLoading, setRandomLoading] = useState(false);
+  const [strategyLoading, setStrategyLoading] = useState(false);
   const [trends, setTrends] = useState<Trend[]>([]);
   const [randomTweets, setRandomTweets] = useState<string[]>([]);
+  const [drafts, setDrafts] = useState<StrategyDraft[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [copiedAllTrends, setCopiedAllTrends] = useState(false);
   const [copiedAllRandom, setCopiedAllRandom] = useState(false);
+  const [copiedAllDrafts, setCopiedAllDrafts] = useState(false);
   const [copiedBTC, setCopiedBTC] = useState(false);
 
   // Load Groq key and saved tweets from localStorage on mount
@@ -43,6 +47,15 @@ export default function Page() {
         setRandomTweets(JSON.parse(savedRandom));
       } catch (e) {
         console.error('Failed to parse saved random tweets', e);
+      }
+    }
+
+    const savedDrafts = localStorage.getItem('last_drafts');
+    if (savedDrafts) {
+      try {
+        setDrafts(JSON.parse(savedDrafts));
+      } catch (e) {
+        console.error('Failed to parse saved drafts', e);
       }
     }
   }, []);
@@ -146,6 +159,45 @@ export default function Page() {
     }
   };
 
+  const handleFetchStrategy = async () => {
+    setError(null);
+    setDrafts([]);
+
+    if (!groqKey.trim()) {
+      setError('Please configure your Groq API key in settings.');
+      setShowSettings(true);
+      return;
+    }
+
+    setStrategyLoading(true);
+    try {
+      const response = await fetch('/api/strategy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          groqApiKey: groqKey,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json() as { error?: string };
+        throw new Error(errorData.error || 'Failed to fetch drafts');
+      }
+
+      const data = await response.json();
+      setDrafts(data.drafts);
+      localStorage.setItem('last_drafts', JSON.stringify(data.drafts));
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Something went wrong. Please try again.';
+      setError(message);
+    } finally {
+      setStrategyLoading(false);
+    }
+  };
+
   const handleUpdateTrend = (updatedTrend: Trend) => {
     setTrends((prevTrends) => {
       const newTrends = prevTrends.map((t) => (t.rank === updatedTrend.rank ? updatedTrend : t));
@@ -154,19 +206,27 @@ export default function Page() {
     });
   };
 
-  const handleCopyAll = async (type: 'trends' | 'random') => {
-    const allTweets = type === 'trends'
-      ? trends.map((t) => t.generatedTweet).join('\n\n')
-      : randomTweets.join('\n\n');
+  const handleCopyAll = async (type: 'trends' | 'random' | 'strategy') => {
+    let allTweets = '';
+    if (type === 'trends') {
+      allTweets = trends.map((t) => t.generatedTweet).join('\n\n');
+    } else if (type === 'random') {
+      allTweets = randomTweets.join('\n\n');
+    } else if (type === 'strategy') {
+      allTweets = drafts.map((d) => d.text).join('\n\n');
+    }
 
     try {
       await navigator.clipboard.writeText(allTweets);
       if (type === 'trends') {
         setCopiedAllTrends(true);
         setTimeout(() => setCopiedAllTrends(false), 2000);
-      } else {
+      } else if (type === 'random') {
         setCopiedAllRandom(true);
         setTimeout(() => setCopiedAllRandom(false), 2000);
+      } else if (type === 'strategy') {
+        setCopiedAllDrafts(true);
+        setTimeout(() => setCopiedAllDrafts(false), 2000);
       }
     } catch (error) {
       console.error('Failed to copy all:', error);
@@ -257,10 +317,10 @@ export default function Page() {
         <header className="flex items-start justify-between mb-12">
           <div>
             <h1 className="text-3xl font-black tracking-tight mb-2">
-              TrendBanger <span className="text-sm font-medium bg-white text-black px-2 py-0.5 rounded-full align-middle ml-2">Worldwide</span>
+              On2Mike Strategist <span className="text-sm font-medium bg-white text-black px-2 py-0.5 rounded-full align-middle ml-2">Growth Edition</span>
             </h1>
             <p className="text-zinc-500 font-medium">
-              Global trends transformed into viral, savage takes.
+              Daily viral growth plan for @On2Mike. Tech, Football, and Vibes.
             </p>
           </div>
           <Button
@@ -273,28 +333,120 @@ export default function Page() {
           </Button>
         </header>
 
-        <Tabs defaultValue="trends" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 bg-zinc-950 border border-zinc-900 p-1 h-12 rounded-full mb-8">
+        <Tabs defaultValue="strategy" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 bg-zinc-950 border border-zinc-900 p-1 h-12 rounded-full mb-8">
+            <TabsTrigger
+              value="strategy"
+              className="rounded-full data-[state=active]:bg-zinc-800 data-[state=active]:text-white font-bold"
+            >
+              Growth Strategist
+            </TabsTrigger>
             <TabsTrigger
               value="trends"
               className="rounded-full data-[state=active]:bg-zinc-800 data-[state=active]:text-white font-bold"
             >
-              Worldwide Trends
+              Context Trends
             </TabsTrigger>
             <TabsTrigger
               value="random"
               className="rounded-full data-[state=active]:bg-zinc-800 data-[state=active]:text-white font-bold"
             >
-              Global Random
+              Vibe Check
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="strategy" className="mt-0 focus-visible:outline-none">
+            {/* Hero / Action Section */}
+            <section className="mb-12">
+              <div className="space-y-6">
+                <p className="text-xl text-zinc-300 leading-relaxed">
+                  Generate 10 high-quality post drafts for today based on the 2025 X algorithm and your specific niche.
+                </p>
+                <Button
+                  onClick={handleFetchStrategy}
+                  disabled={strategyLoading}
+                  className="w-full h-14 bg-white text-black hover:bg-zinc-200 text-lg font-black rounded-full transition-all active:scale-[0.98]"
+                >
+                  {strategyLoading ? (
+                    <>
+                      <RotateCw className="h-5 w-5 mr-3 animate-spin" />
+                      Crafting Daily Strategy...
+                    </>
+                  ) : (
+                    <>
+                      <Zap className="h-5 w-5 mr-3" />
+                      Generate Today's 10 Drafts
+                    </>
+                  )}
+                </Button>
+              </div>
+            </section>
+
+            {/* Error Message */}
+            {error && (
+              <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-2xl mb-8">
+                <p className="text-sm text-zinc-400">
+                  <span className="font-bold text-white mr-2">Note:</span> {error}
+                </p>
+              </div>
+            )}
+
+            {/* Results Section */}
+            {drafts.length > 0 && (
+              <div className="space-y-8">
+                <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl">
+                  <h3 className="text-sm font-black uppercase tracking-widest text-zinc-500 mb-4 flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-yellow-500" />
+                    Weekly Review Prompt
+                  </h3>
+                  <p className="text-zinc-300 text-sm leading-relaxed italic">
+                    "Analyze my last 7 days of engagement. Which of my Manchester United hot takes got the most quote tweets, and did my Tech/AI threads convert to followers at a higher rate than my pop culture commentary? Adjust next week's ratio accordingly."
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between sticky top-0 py-4 bg-black/80 backdrop-blur-md z-10 border-b border-zinc-900">
+                  <h2 className="text-lg font-bold">Daily Drafts</h2>
+                  <Button
+                    onClick={() => handleCopyAll('strategy')}
+                    variant="ghost"
+                    size="sm"
+                    className="text-zinc-500 hover:text-white font-bold"
+                  >
+                    {copiedAllDrafts ? (
+                      <Check className="h-4 w-4 mr-2" />
+                    ) : (
+                      <Copy className="h-4 w-4 mr-2" />
+                    )}
+                    {copiedAllDrafts ? 'Copied' : 'Copy All'}
+                  </Button>
+                </div>
+                <div className="space-y-px bg-zinc-900 border-x border-zinc-900 overflow-hidden rounded-2xl border border-zinc-900">
+                  {drafts.map((draft) => (
+                    <StrategyCard
+                      key={draft.id}
+                      draft={draft}
+                      onCopied={() => showToast('Copied to clipboard')}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {!strategyLoading && drafts.length === 0 && !error && (
+              <div className="py-20 text-center border border-dashed border-zinc-800 rounded-3xl">
+                <p className="text-zinc-500 font-medium">
+                  Your growth plan is ready. Tap the button above to generate 10 drafts.
+                </p>
+              </div>
+            )}
+          </TabsContent>
 
           <TabsContent value="trends" className="mt-0 focus-visible:outline-none">
             {/* Hero / Action Section */}
             <section className="mb-12">
               <div className="space-y-6">
                 <p className="text-xl text-zinc-300 leading-relaxed">
-                  Skip the generic AI vibes. Get real, sharp-witted global commentary on the latest worldwide trends.
+                  Get real, sharp-witted global commentary on the latest worldwide trends to use as context for your posts.
                 </p>
                 <Button
                   onClick={handleFetchTrends}
@@ -304,10 +456,13 @@ export default function Page() {
                   {loading ? (
                     <>
                       <RotateCw className="h-5 w-5 mr-3 animate-spin" />
-                      Analyzing Global Trends...
+                      Analyzing Trends...
                     </>
                   ) : (
-                    'Generate Worldwide Bangers'
+                    <>
+                      <TrendingUp className="h-5 w-5 mr-3" />
+                      Fetch Context Trends
+                    </>
                   )}
                 </Button>
               </div>
@@ -445,7 +600,7 @@ export default function Page() {
 
         <footer className="mt-20 pt-8 border-t border-zinc-900 text-center pb-12">
           <p className="text-zinc-600 text-xs font-bold uppercase tracking-widest mb-4">
-            Worldwide Edition • Global Tone • Powered by Groq
+            @On2Mike Growth Edition • Powered by Groq
           </p>
           <div className="flex flex-col items-center gap-4">
             <a
